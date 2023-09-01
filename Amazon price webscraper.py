@@ -1,8 +1,19 @@
 import requests
 import time
+import os
+from dotenv import load_dotenv
 from bs4 import BeautifulSoup
+from pymongo import MongoClient
 
-url = 'https://www.amazon.eg/-/en/LG-Dis-27GN650-UltraGear-Gaming/dp/B08VRPGMKP/ref=sr_1_1?crid=2OCN4XABMHFKW&keywords=LG+27GN650-B&qid=1661272068&sprefix=lg+27gn650-b%2Caps%2C130&sr=8-1'
+load_dotenv()
+mongo_uri = os.environ.get('MONGO_URI')
+
+# Connect to MongoDB
+client = MongoClient(mongo_uri)
+db = client["mydatabase"]
+collection = db["prices"]
+
+url = input('Enter the URL of the product you want to track: ')
 def webscrape():
     try:
         headers = {"User-Agent": 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:103.0) Gecko/20100101 Firefox/103.0'}
@@ -12,7 +23,8 @@ def webscrape():
         price = soup.find(class_="a-price-whole").get_text().replace(",", "")
         currency = soup.find(class_="a-price-symbol").get_text()
         price = float(price)
-        if(price < 7500):
+        collection.insert_one({"prices": price})
+        if price < 30000:
             print(f"Price of {title.strip()} has changed to: {currency} {str(price)}")
         else:
             print(f"Price has not changed: {str(price)}")
